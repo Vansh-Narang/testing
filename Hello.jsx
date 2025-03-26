@@ -1,62 +1,118 @@
-import { useState } from "react";
+import React, { useState, useCallback } from 'react'
+import "./BookDemo.css"
+import tick from "../assets/Ticks.svg"
+import grdp from "../assets/1.svg"
+import soc from "../assets/2.svg"
+import iso from "../assets/3.svg"
+import zoom from "../assets/zoom.svg"
+import reuters from "../assets/reuters.svg"
+import heineken from "../assets/heineken.svg"
+import logo from "../assets/NexaStack.svg"
+import arrow from "../assets/Vector.svg"
+import "../Pages/Button.css"
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
+import { DemoItem } from '@mui/x-date-pickers/internals/demo';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import dayjs from 'dayjs';
+import styled from "styled-components";
+import ProgressBar from '../Components/ProgressBar'
+
+const StyledSpan = styled.span`
+  color: red;
+`;
 
 const questionsData = [
-  { id: 1, text: "What is React?", options: ["Library", "Framework", "Language", "Tool"] },
-  { id: 2, text: "What is Tailwind?", options: ["CSS Framework", "JavaScript Library", "Database", "Compiler"] },
-  { id: 3, text: "What is JSX?", options: ["Syntax Extension", "Programming Language", "Database", "Tool"] },
-  { id: 4, text: "Which hook is used for state?", options: ["useState", "useEffect", "useRef", "useContext"] },
-  { id: 5, text: "What does useEffect do?", options: ["Handles Side Effects", "Manages State", "Creates Components", "Styles Components"] },
-  { id: 6, text: "What is the virtual DOM?", options: ["JavaScript Representation", "HTML Copy", "Database", "API"] },
-  { id: 7, text: "What is Next.js?", options: ["React Framework", "JavaScript Library", "CSS Tool", "API"] },
-  { id: 8, text: "What is useRef used for?", options: ["DOM Manipulation", "State Management", "API Calls", "Styling"] },
+    { id: 1, text: "Which segment does your company belongs to?", options: ["Startup", "Scale Startup", "SME", "Mid Enterprises", "Large Enterprises", "Public Sector", "Non-Profit Organizations"] },
+    { id: 2, text: "How many technical teams will be working with NexaStack?", options: ["0-10", "11-50", "51-100", "More Than 100", "Only Me"] },
+    { id: 3, text: "Does your team have in-house AI/ML expertise, or do you need support?", options: ["We have an in-house AI/ML team", "We need external AI/ML support", "Need additional support", "Not sure yet, exploring options"] },
+    { id: 4, text: "Do you have specific compliance requirements (e.g., GDPR, HIPAA)?", options: ["GDRP", "HIPAA", "None", "Not Sure"] },
+    { id: 5, text: "Where do you plan to deploy NexaStack for Unified Inference, and what are your infrastructure needs? (you can select multiple)", options: ["On-Premises – We have enterprise-grade hardware", "On-Premises - Need hardware recommendations", "Amazon", "Microsoft Azure", "Google Cloud", "Multi Cloud", "Not sure yet, need guidance"] },
+    { id: 6, text: "What is your primary use case for NexaStack?", options: ["Agentic AI Development & Deployment", "AI Model Inference & Optimization", "Enterprise AI Operations", "MLOps & Model Lifecycle Management", "AI-Powered Applications & Services", "Others (Please Specify)"] },
+    { id: 7, text: "Are there specific AI models you plan to operate using NexaStack?", options: ["LLMs (Large Language Models)", "Vision Models", "Recommendation Systems", "Speech & Audio Models", "Custom AI/ML Models", "Not Sure, Need Guidance"] },
 ];
 
-export default function QuestionPage() {
-  const [answeredCount, setAnsweredCount] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState({});
-  const [currentIndex, setCurrentIndex] = useState(0);
+const BookDemo = () => {
+    const [selectedAnswers, setSelectedAnswers] = useState({});
+    const [currentStep, setCurrentStep] = useState(1);
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [selectedValue, setSelectedValue] = useState('');
+    const [isLastQuestionAnswered, setIsLastQuestionAnswered] = useState(false);
+    const [pendingAnswer, setPendingAnswer] = useState(null);
+    const [formData, setFormData] = useState({
+        firstName: '',
+        lastName: '',
+        email: '',
+        companyName: '',
+        industry: '',
+        department: ''
+    });
+    const [formErrors, setFormErrors] = useState({});
 
-  const handleAnswer = (questionId, option) => {
-    if (selectedAnswers[questionId]) return;
+    const handleAnswer = useCallback((questionId, option) => {
+        // Set the pending answer to create a visual selection effect
+        setPendingAnswer({ questionId, option });
 
-    setSelectedAnswers((prev) => ({ ...prev, [questionId]: option }));
-    setAnsweredCount((prev) => prev + 1);
-    setCurrentIndex((prev) => prev + 2);
-  };
+        // After a short delay, proceed to the next question
+        setTimeout(() => {
+            setSelectedAnswers((prev) => ({
+                ...prev,
+                [questionId]: option
+            }));
 
-  const progress = (answeredCount / questionsData.length) * 100;
-  const currentQuestions = questionsData.slice(currentIndex, currentIndex + 2);
+            // Reset pending answer
+            setPendingAnswer(null);
 
-  return (
-    <div className="max-w-xl mx-auto p-6 bg-white shadow-md rounded-lg mt-10">
-      <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-4">
-        <div className="h-full bg-blue-500 transition-all" style={{ width: `${progress}%` }}></div>
-      </div>
+            // Move to next question
+            if (currentQuestionIndex < questionsData.length - 1) {
+                setCurrentQuestionIndex(prev => prev + 1);
+            }
+            // Enable next step for last question
+            else if (currentQuestionIndex === questionsData.length - 1) {
+                setIsLastQuestionAnswered(true);
+            }
+        }, 500); // 500ms delay to show the selection
+    }, [currentQuestionIndex]);
 
-      {currentQuestions.map((q) => (
-        <div key={q.id} className="mb-6">
-          <h3 className="text-lg font-semibold mb-2">{q.text}</h3>
-          <div className="flex flex-col gap-2">
-            {q.options.map((option) => (
-              <button
-                key={option}
-                className={`py-2 px-4 border rounded ${
-                  selectedAnswers[q.id] === option ? "bg-blue-500 text-white" : "bg-gray-100"
-                }`}
-                onClick={() => handleAnswer(q.id, option)}
-              >
-                {option}
-              </button>
-            ))}
-          </div>
+    // Rest of the code remains the same as in your original component...
+
+    return (
+        <div className='w-full md:flex md:flex-row flex-col justify-between mx-auto h-screen font-inter overflow-x-hidden'>
+            {/* ... other parts of your existing JSX ... */}
+
+            {currentStep === 1 && (
+                <div>
+                    {/* ... other parts of your existing JSX ... */}
+                    <div className="w-full mt-14">
+                        <div key={questionsData[currentQuestionIndex].id} className="mb-6 flex flex-col">
+                            <h2 className="text-sm md:text-xl font-semibold mb-2 text-start ml-6 md:ml-12 text-[22px] text-[#000000]">
+                                {questionsData[currentQuestionIndex].text} <StyledSpan>*</StyledSpan>
+                            </h2>
+                            <div className="flex flex-wrap gap-5 md:gap-6 md:gap-y-8 mx-4 md:ml-12 my-6 md:text-[15px]">
+                                {questionsData[currentQuestionIndex].options.map((option) => (
+                                    <button
+                                        key={option}
+                                        className={`px-4 py-2 md:px-8 md:py-3 rounded-full border font-normal text-sm 
+                                            ${selectedAnswers[questionsData[currentQuestionIndex].id] === option ? "bg-blue-500 text-white" : 
+                                            pendingAnswer && pendingAnswer.option === option ? "bg-blue-300 text-white" : 
+                                            "bg-[#F6F6F6]"}`}
+                                        onClick={() => handleAnswer(questionsData[currentQuestionIndex].id, option)}
+                                        disabled={pendingAnswer !== null} // Prevent multiple selections during delay
+                                    >
+                                        {option}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                    {/* ... rest of your existing JSX ... */}
+                </div>
+            )}
+
+            {/* Rest of your component remains the same */}
         </div>
-      ))}
+    );
+};
 
-      {answeredCount === questionsData.length && (
-        <button className="w-full mt-4 py-2 bg-green-500 text-white font-semibold rounded">
-          Next Step
-        </button>
-      )}
-    </div>
-  );
-}
+export default BookDemo;
